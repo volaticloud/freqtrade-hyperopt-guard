@@ -1,0 +1,393 @@
+[
+  {
+    "name": "thin_best_epoch_is_overridden",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 1,
+      "epochs_data": [
+        {
+          "epoch_number": 1,
+          "loss": -0.9,
+          "results_metrics": {
+            "profit_factor": 0,
+            "total_trades": 2
+          }
+        },
+        {
+          "epoch_number": 2,
+          "loss": -0.4,
+          "results_metrics": {
+            "profit_factor": 1.61,
+            "total_trades": 180
+          }
+        },
+        {
+          "epoch_number": 3,
+          "loss": -0.3,
+          "results_metrics": {
+            "profit_factor": 1.42,
+            "total_trades": 140
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 2,
+      "eligible": 2,
+      "considered": 3,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "healthy_best_epoch_is_kept",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 2,
+      "epochs_data": [
+        {
+          "epoch_number": 1,
+          "loss": -0.2,
+          "results_metrics": {
+            "profit_factor": 1.2,
+            "total_trades": 90
+          }
+        },
+        {
+          "epoch_number": 2,
+          "loss": -0.55,
+          "results_metrics": {
+            "profit_factor": 1.55,
+            "total_trades": 120
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 2,
+      "eligible": 2,
+      "considered": 2,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "all_below_floor_is_degenerate",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 1,
+      "epochs_data": [
+        {
+          "epoch_number": 1,
+          "loss": -0.9,
+          "results_metrics": {
+            "profit_factor": 5,
+            "total_trades": 3
+          }
+        },
+        {
+          "epoch_number": 2,
+          "loss": -0.1,
+          "results_metrics": {
+            "profit_factor": 2,
+            "total_trades": 8
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 1,
+      "eligible": 0,
+      "considered": 2,
+      "degenerate": true,
+      "hasEpoch": false
+    }
+  },
+  {
+    "name": "no_epochs_data_is_not_degenerate",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 7,
+      "best_result": {
+        "loss": -0.5
+      }
+    },
+    "expected": {
+      "number": 7,
+      "eligible": 0,
+      "considered": 0,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "empty_epochs_data_is_not_degenerate",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 4,
+      "epochs_data": []
+    },
+    "expected": {
+      "number": 4,
+      "eligible": 0,
+      "considered": 0,
+      "degenerate": false,
+      "hasEpoch": false
+    }
+  },
+  {
+    "name": "unparseable_profit_factor_treated_as_missing",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 1,
+      "epochs_data": [
+        {
+          "epoch_number": 1,
+          "loss": -0.7,
+          "results_metrics": {
+            "profit_factor": "Infinity",
+            "total_trades": 60
+          }
+        },
+        {
+          "epoch_number": 2,
+          "loss": -0.2,
+          "results_metrics": {
+            "profit_factor": 1.3,
+            "total_trades": 60
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 1,
+      "eligible": 2,
+      "considered": 2,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "missing_profit_factor_falls_back_to_trades",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 1,
+      "epochs_data": [
+        {
+          "epoch_number": 1,
+          "loss": -0.8,
+          "results_metrics": {
+            "total_trades": 10
+          }
+        },
+        {
+          "epoch_number": 2,
+          "loss": -0.3,
+          "results_metrics": {
+            "total_trades": 95
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 2,
+      "eligible": 1,
+      "considered": 2,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "profit_factor_equal_to_floor_is_rejected",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 1,
+      "epochs_data": [
+        {
+          "epoch_number": 1,
+          "loss": -0.9,
+          "results_metrics": {
+            "profit_factor": 1,
+            "total_trades": 100
+          }
+        },
+        {
+          "epoch_number": 2,
+          "loss": -0.1,
+          "results_metrics": {
+            "profit_factor": 1.01,
+            "total_trades": 100
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 2,
+      "eligible": 1,
+      "considered": 2,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "legacy_trade_count_key_is_read",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 1,
+      "epochs_data": [
+        {
+          "epoch_number": 1,
+          "loss": -0.6,
+          "results_metrics": {
+            "profit_factor": 1.4,
+            "trade_count": 120
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 1,
+      "eligible": 1,
+      "considered": 1,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "loss_tie_breaks_on_earliest_epoch",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 3,
+      "epochs_data": [
+        {
+          "epoch_number": 5,
+          "loss": -0.5,
+          "results_metrics": {
+            "profit_factor": 1.3,
+            "total_trades": 80
+          }
+        },
+        {
+          "epoch_number": 2,
+          "loss": -0.5,
+          "results_metrics": {
+            "profit_factor": 1.3,
+            "total_trades": 80
+          }
+        },
+        {
+          "epoch_number": 9,
+          "loss": -0.5,
+          "results_metrics": {
+            "profit_factor": 1.3,
+            "total_trades": 80
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 2,
+      "eligible": 3,
+      "considered": 3,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "zero_floor_disables_both_tests",
+    "floor": {
+      "minTrades": 0,
+      "minProfitFactor": 0
+    },
+    "raw": {
+      "best_epoch": 1,
+      "epochs_data": [
+        {
+          "epoch_number": 1,
+          "loss": -0.95,
+          "results_metrics": {
+            "profit_factor": 0,
+            "total_trades": 2
+          }
+        },
+        {
+          "epoch_number": 2,
+          "loss": -0.2,
+          "results_metrics": {
+            "profit_factor": 1.8,
+            "total_trades": 200
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 1,
+      "eligible": 2,
+      "considered": 2,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  },
+  {
+    "name": "unparseable_entries_are_skipped",
+    "floor": {
+      "minTrades": 50,
+      "minProfitFactor": 1
+    },
+    "raw": {
+      "best_epoch": 1,
+      "epochs_data": [
+        "not-an-object",
+        {
+          "epoch_number": 2,
+          "loss": -0.9
+        },
+        {
+          "epoch_number": 3,
+          "loss": -0.3,
+          "results_metrics": {
+            "profit_factor": 1.25,
+            "total_trades": 70
+          }
+        }
+      ]
+    },
+    "expected": {
+      "number": 3,
+      "eligible": 1,
+      "considered": 2,
+      "degenerate": false,
+      "hasEpoch": true
+    }
+  }
+]
