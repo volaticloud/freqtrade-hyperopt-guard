@@ -16,9 +16,36 @@ FTHYPT = (
 )
 
 
-def test_epoch_number_is_the_1_based_line_number():
+def test_epoch_number_comes_from_freqtrade_not_line_position():
+    """Freqtrade sets `current_epoch` on every epoch before writing it
+    (hyperopt.py: evaluate_result -> _save_result), so that is authoritative.
+
+    Line position only agrees for a single complete run -- not for a file that
+    was filtered, concatenated or resumed. Reporting "epoch 12" while
+    `freqtrade hyperopt-list` says "epoch 47" is worse than useless.
+    """
+    numbered = (
+        '{"current_epoch":47,"loss":-0.42,"results_metrics":{"total_trades":184}}\n'
+        '{"current_epoch":48,"loss":-0.91,"results_metrics":{"total_trades":2}}\n'
+    )
+    result = parse_fthypt(numbered)
+    assert [e["epoch_number"] for e in result["epochs_data"]] == [47, 48]
+    assert result["best_epoch"] == 48
+
+
+def test_line_position_is_only_a_fallback():
+    """A file lacking current_epoch still gets usable 1-based numbering."""
     result = parse_fthypt(FTHYPT)
     assert [e["epoch_number"] for e in result["epochs_data"]] == [1, 2, 3]
+
+
+def test_bare_Infinity_is_read_as_a_float_not_a_parse_error():
+    """freqtrade dumps with rapidjson NM_NATIVE|NM_NAN, so .fthypt legitimately
+    contains bare Infinity/NaN -- tokens RFC 8259 forbids. Python accepts them;
+    stricter parsers reject the whole line."""
+    import math
+    r = parse_fthypt('{"loss":-0.5,"results_metrics":{"total_trades":60,"profit_factor":Infinity}}')
+    assert r["epochs_data"][0]["results_metrics"]["profit_factor"] == math.inf
 
 
 def test_best_epoch_reproduces_freqtrades_own_choice():

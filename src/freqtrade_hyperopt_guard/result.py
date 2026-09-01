@@ -1,9 +1,26 @@
 """Read Freqtrade's own ``.fthypt`` hyperopt result file.
 
 ``.fthypt`` is JSON Lines: one JSON object per line, one line per epoch, each
-carrying ``loss``, ``params_dict`` and ``results_metrics``. Freqtrade does not
-number the epochs in the file — the line number *is* the epoch number, 1-based —
-so that is injected here, matching what freqtrade's own reporting shows you.
+carrying ``loss``, ``params_dict``, ``results_metrics`` and ``current_epoch``.
+Freqtrade's own writer says so plainly — *"Store one line per epoch. While not a
+valid json object - this allows appending easily."*
+
+Two things about the format that bite naive readers:
+
+**It is not strict JSON.** Freqtrade dumps with
+``rapidjson.NM_NATIVE | rapidjson.NM_NAN``, so a metric can appear as bare
+``Infinity``, ``-Infinity`` or ``NaN`` — tokens RFC 8259 does not allow. Python's
+``json`` accepts them by default and yields the float; stricter parsers reject
+the line outright. That is why an infinite profit factor has to be handled as a
+value here rather than assumed impossible.
+
+**Epoch numbers come from the file, not from line position.** Freqtrade sets
+``current_epoch`` on every epoch before writing it. Line position happens to
+agree for a single complete run, but not for a file that was filtered,
+concatenated, or resumed — and a tool reporting "epoch 12" while
+``freqtrade hyperopt-list`` says "epoch 47" is worse than useless. So
+``current_epoch`` wins, and the line number is only a fallback for a file that
+somehow lacks it.
 
 Find yours at::
 
@@ -41,7 +58,9 @@ def _iter_epochs(text: str) -> Iterator[dict[str, Any]]:
             continue
         if not isinstance(epoch, dict):
             continue
-        epoch["epoch_number"] = i
+        # Prefer freqtrade's own numbering; fall back to line position.
+        n = epoch.get("current_epoch")
+        epoch["epoch_number"] = int(n) if isinstance(n, int) and not isinstance(n, bool) else i
         yield epoch
 
 

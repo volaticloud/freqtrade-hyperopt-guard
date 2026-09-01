@@ -111,6 +111,24 @@ of a strongly trending run. The trade count is then the only evidence — which 
 why a thin epoch with no profit factor is still rejected. An infinite profit
 factor never rescues a 2-trade epoch.
 
+## Two things about `.fthypt` worth knowing
+
+Verified against freqtrade's own source (`freqtrade/optimize/hyperopt/hyperopt.py`,
+2025.11.2), not inferred:
+
+**It is not strict JSON.** Freqtrade dumps each epoch with
+`rapidjson.NM_NATIVE | rapidjson.NM_NAN`, so a metric can appear as bare
+`Infinity`, `-Infinity` or `NaN` — tokens RFC 8259 does not permit. Python's
+`json` accepts them and yields the float; stricter parsers reject the line. Its
+own docstring is candid about the format: *"Store one line per epoch. While not
+a valid json object - this allows appending easily."*
+
+**Epoch numbers come from the file.** Freqtrade sets `current_epoch` on every
+epoch before writing it, so that is what this tool reports — matching
+`freqtrade hyperopt-list`. Line position is only a fallback, because it agrees
+with the real number for a single complete run and diverges for a file that was
+filtered, concatenated or resumed.
+
 ## What this is not
 
 It does not make a strategy good, and a cleared floor is not permission to go
